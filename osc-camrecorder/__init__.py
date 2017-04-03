@@ -1,6 +1,21 @@
 import sys
 import liblo, pyautogui
 
+
+class Transport(object):
+    def __init__(self):
+        self.play = False
+
+    def play(self):
+        if not self.play:
+            self.startPlaying()
+            self.play = True
+
+    def pause(self):
+        if self.play:
+            self.stopPlaying()
+            self.play = False
+
 # create server, listening on port 1234
 try:
     target = liblo.Address("osc.udp://hawat:3819")
