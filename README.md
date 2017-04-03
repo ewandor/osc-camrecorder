@@ -7,6 +7,7 @@ packages:
 scrot python3-tk python3-dev liblo-dev
 
 modules:
+* cython
 * pyliblo
 * python3-xlib
 * pyautogui
