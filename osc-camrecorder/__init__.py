@@ -4,39 +4,41 @@ import liblo, pyautogui
 
 class Transport(object):
     def __init__(self):
-        self.play = False
+        self.playing = False
 
     def play(self):
-        if not self.play:
-            self.startPlaying()
-            self.play = True
+        if not self.playing:
+            self.start_stop_playing()
+            self.playing = True
 
     def pause(self):
-        if self.play:
-            self.stopPlaying()
-            self.play = False
+        if self.playing:
+            self.start_stop_playing()
+            self.playing = False
+
+    @staticmethod
+    def start_stop_playing():
+        pyautogui.keyDown('v')
+        pyautogui.keyUp('v')
+
+    def transport_stop_callback(self, path, args):
+        if args[0] == 1:
+            self.pause()
+            print('stop')
+
+    def transport_play_callback(self, path, args):
+        if args[0] == 1:
+            self.play()
+            print('play')
+
 
 # create server, listening on port 1234
 try:
-    target = liblo.Address("osc.udp://hawat:3819")
+    target = liblo.Address("osc.udp://localhost:3819")
     server = liblo.Server(8000)
 except liblo.ServerError as err:
     print(err)
     sys.exit()
-
-
-def transport_stop_callback(path, args):
-    if (args[0] == 1):
-        pyautogui.keyDown('v')
-        pyautogui.keyUp('v')
-        print('stop')
-
-
-def transport_play_callback(path, args):
-    if (args[0] == 1):
-        pyautogui.keyDown('v')
-        pyautogui.keyUp('v')
-        print('play')
 
 
 def fallback(path, args, types, src):
@@ -47,9 +49,11 @@ def fallback(path, args, types, src):
             # print("argument of type '%s': %s" % (t, a))
             pass
 
+t = Transport()
+
 # register method taking an int and a float
-server.add_method("/transport_stop", 'i', transport_stop_callback)
-server.add_method("/transport_play", 'i', transport_play_callback)
+server.add_method("/transport_stop", 'i', t.transport_stop_callback)
+server.add_method("/transport_play", 'i', t.transport_play_callback)
 
 # register a fallback for unhandled messages
 server.add_method(None, None, fallback)
@@ -57,5 +61,4 @@ server.add_method(None, None, fallback)
 # loop and dispatch messages every 100ms
 liblo.send(target, "/set_surface", 0, 32, 16, 0)
 while True:
-    server.recv(1000)
-    liblo.send(target, "/transport_stop", 0)
+    server.recv(100)
